@@ -10,6 +10,7 @@ const {
   cloudinaryUploadImage,
   cloudinaryRemoveImage,
 } = require("../utils/cloudinary");
+const { Comment } = require("../models/Comment");
 
 /**---------------------------------------------------
  * @desc Create New Post
@@ -86,7 +87,9 @@ module.exports.getAllPostsCtrl = asyncHandler(async (req, res) => {
  * @access public 
   -----------------------------------------------------*/
 module.exports.getSinglePostCtrl = asyncHandler(async (req, res) => {
-  const post = await Post.findById(req.params.id).populate("user", "-password");
+  const post = await Post.findById(req.params.id)
+    .populate("user", "-password")
+    .populate("comments");
   if (!post) return res.status(404).json({ message: "Post not found" });
   res.status(200).json(post);
 });
@@ -116,7 +119,10 @@ module.exports.deletePostCtrl = asyncHandler(async (req, res) => {
   if (req.user.isAdmin || req.user._id == post.user.toString()) {
     await Post.findByIdAndDelete(req.params.id);
     await cloudinaryRemoveImage(post.image.publicId);
+
     // @TODO - Delete all comments that belong to this post
+    await Comment.deleteMany({ postId: post._id });
+
     res
       .status(200)
       .json({ message: "Post deleted successfully", postId: post._id });
@@ -204,10 +210,48 @@ module.exports.updatePostImageCtrl = asyncHandler(async (req, res) => {
       },
     },
     { new: true }
-  ).populate("user", "-password");
+  );
 
   // 7. send response to client
   res.status(200).json(updatedPost);
   // 8. Remove image from the server
   fs.unlinkSync(imagePath);
+});
+
+/**---------------------------------------------------
+ * @desc Toggle Like  
+ * @router /api/posts/like/:id
+ * @method PUT
+ * @access private (only owner of the post)
+  -----------------------------------------------------*/
+
+module.exports.toggleLikeCtrl = asyncHandler(async (req, res) => {
+  const loggedInUser = req.user._id;
+  const { id: postId } = req.params;
+  let post = await Post.findById(postId);
+  if (!post) return res.status(404).json({ message: "Post not found" });
+
+  const isPostAlreadyLiked = post.likes.find(
+    (user) => user.toString() === loggedInUser
+  );
+
+  if (isPostAlreadyLiked) {
+    post = await Post.findByIdAndUpdate(
+      postId,
+      {
+        $pull: { likes: loggedInUser },
+      },
+      { new: true }
+    );
+  } else {
+    post = await Post.findByIdAndUpdate(
+      postId,
+      {
+        $push: { likes: loggedInUser },
+      },
+      { new: true }
+    );
+  }
+
+  res.status(200).json(post);
 });

@@ -7,6 +7,7 @@ const {
   deletePostCtrl,
   updatePostCtrl,
   updatePostImageCtrl,
+  toggleLikeCtrl,
 } = require("../controllers/postsController");
 const { verifyToken } = require("../middlewares/verifyToken");
 const photoUpload = require("../middlewares/photoUpload");
@@ -36,5 +37,8 @@ router
     photoUpload.single("image"),
     updatePostImageCtrl
   );
+
+// /api/posts/like/:id
+router.route("/like/:id").put(validateObjectId, verifyToken, toggleLikeCtrl);
 
 module.exports = router;
