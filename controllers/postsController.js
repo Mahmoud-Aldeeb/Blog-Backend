@@ -56,7 +56,7 @@ module.exports.createPostCtrl = asyncHandler(async (req, res) => {
   -----------------------------------------------------*/
 
 module.exports.getAllPostsCtrl = asyncHandler(async (req, res) => {
-  const POST_PER_PAGE = 3;
+  const POST_PER_PAGE = 4;
   const { pageNumber, category } = req.query;
   let posts;
 
@@ -168,6 +168,7 @@ module.exports.updatePostCtrl = asyncHandler(async (req, res) => {
 
   // 5. send response to client
   res.status(200).json(updatedPost);
+  // res.status(200).json({ message: "Post updated successfully", updatedPost });
 });
 
 /**---------------------------------------------------
