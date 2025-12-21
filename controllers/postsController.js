@@ -56,7 +56,7 @@ module.exports.createPostCtrl = asyncHandler(async (req, res) => {
   -----------------------------------------------------*/
 
 module.exports.getAllPostsCtrl = asyncHandler(async (req, res) => {
-  const POST_PER_PAGE = 4;
+  const POST_PER_PAGE = 6;
   const { pageNumber, category } = req.query;
   let posts;
 

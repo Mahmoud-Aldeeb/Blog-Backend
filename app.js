@@ -18,11 +18,26 @@ const app = express();
 app.use(express.json());
 
 // cors Policy
+
 app.use(
   cors({
-    origin: "*",
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173", // Vite dev server
+      "https://blog-frontend-psi-beryl.vercel.app", // ضع رابط الفرونت إند هنا
+      // أضف أي دومينات أخرى
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// app.use(
+//   cors({
+//     origin: "*",
+//   })
+// );
 
 // Apply helmet middleware
 app.use(helmet());
@@ -37,6 +52,9 @@ app.use(hpp());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  message: {
+    error: "Too many requests, please try again later.",
+  },
 });
 app.use(limiter);
 
@@ -53,8 +71,16 @@ app.use(notFound);
 app.use(errorHandler);
 
 // running the server
-const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, () =>
-  console.log(`Server is running on http://localhost:${PORT}`)
-);
+if (require.main === module) {
+  const PORT = process.env.PORT || 8000;
+  app.listen(PORT, () =>
+    console.log(`Server is running on http://localhost:${PORT}`)
+  );
+}
+
+// const PORT = process.env.PORT || 8000;
+
+// app.listen(PORT, () =>
+//   console.log(`Server is running on http://localhost:${PORT}`)
+// );
