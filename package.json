@@ -12,7 +12,9 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon app"
+    "dev": "nodemon app.js",
+    "start": "node app.js",
+    "vercel-build": "echo 'Building for Vercel'"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -36,6 +38,6 @@
     "nodemon": "^3.1.11"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.x"
   }
 }
