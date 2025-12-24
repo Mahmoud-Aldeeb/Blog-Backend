@@ -7,13 +7,16 @@
     "Aldeeb"
   ],
   "license": "ISC",
+  "engines": {
+    "node": "22.21.1"
+  },
   "author": "Mahmoud Aldeeb",
   "type": "commonjs",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon app.js",
-    "start": "node app.js",
+    "dev": "nodemon index.js",
+    "start": "node index.js",
     "vercel-build": "echo 'Building for Vercel'"
   },
   "dependencies": {

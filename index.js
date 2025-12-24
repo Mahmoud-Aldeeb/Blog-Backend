@@ -11,38 +11,22 @@ const hpp = require("hpp");
 const app = express();
 
 // Connection to Db
-
-let isDbConnected = false;
-
-const initializeDb = async () => {
-  try {
-    await connectToDb();
-    isDbConnected = true;
-    console.log("Database connected successfully");
-  } catch (error) {
-    console.error("Database connection error:", error.message);
-    // في Vercel Serverless، لا توقف التطبيق
-  }
-};
-
-// connectToDb();
+connectToDb();
 
 // Middlewares
 app.use(express.json());
 
 // cors Policy
-
 app.use(
   cors({
     origin: [
       "http://localhost:3000",
       "http://localhost:5173", // Vite dev server
-      "https://blog-frontend-psi-beryl.vercel.app", // ضع رابط الفرونت إند هنا
+      "https://blog-frontend-psi-beryl.vercel.app",
       "*",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -72,20 +56,20 @@ const limiter = rateLimit({
 app.use("/api/", limiter);
 
 // Health check endpoint (مهم جداً لـ Vercel)
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    database: isDbConnected ? "connected" : "disconnected",
-    environment: process.env.NODE_ENV || "development",
-  });
-});
-app.use(async (req, res, next) => {
-  if (!isDbConnected && !req.path.includes("/health")) {
-    await initializeDb();
-  }
-  next();
-});
+// app.get("/api/health", (req, res) => {
+//   res.json({
+//     status: "ok",
+//     timestamp: new Date().toISOString(),
+//     database: isDbConnected ? "connected" : "disconnected",
+//     environment: process.env.NODE_ENV || "development",
+//   });
+// });
+// app.use(async (req, res, next) => {
+//   if (!isDbConnected && !req.path.includes("/health")) {
+//     await initializeDb();
+//   }
+//   next();
+// });
 
 // router
 app.use("/api/auth", require("./routes/authRoute"));
@@ -95,38 +79,45 @@ app.use("/api/comments", require("./routes/commentsRoute"));
 app.use("/api/categories", require("./routes/categoriesRoute"));
 app.use("/api/password", require("./routes/passwordRoute"));
 
-// Root endpoint
-// app.get("/", (req, res) => {
-//   res.json({
-//     message: "Blog API Server",
-//     version: "1.0.0",
-//     endpoints: {
-//       health: "/api/health",
-//       auth: "/api/auth",
-//       users: "/api/users",
-//       posts: "/api/posts",
-//       comments: "/api/comments",
-//       categories: "/api/categories",
-//       password: "/api/password",
-//     },
-//   });
-// });
+app.get("/", (req, res) => {
+  res.json({
+    message: "🚀 Blog API Server is Running!",
+    version: "1.0.0",
+    documentation: "Available at /api-docs (if configured)",
+    endpoints: {
+      auth: {
+        login: "POST /api/auth/login",
+        register: "POST /api/auth/register",
+        logout: "POST /api/auth/logout",
+      },
+      users: "GET /api/users",
+      posts: "GET /api/posts",
+      comments: "GET /api/comments",
+      categories: "GET /api/categories",
+      password: {
+        forgot: "POST /api/password/forgot",
+        reset: "POST /api/password/reset/:token",
+      },
+    },
+    health: "GET /api/health (uncomment to enable)",
+    status: "active",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "✅ OK",
+    service: "Blog API",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+  });
+});
 
 // Error Handler Middleware
 app.use(notFound);
 app.use(errorHandler);
 
-// running the server
-
-if (require.main === module) {
-  const PORT = process.env.PORT || 8000;
-  app.listen(PORT, () =>
-    console.log(`Server is running on http://localhost:${PORT}`)
-  );
-}
-
-// const PORT = process.env.PORT || 8000;
-
-// app.listen(PORT, () =>
-//   console.log(`Server is running on http://localhost:${PORT}`)
-// );
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
