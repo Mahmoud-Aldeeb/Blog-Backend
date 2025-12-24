@@ -8,7 +8,7 @@
   ],
   "license": "ISC",
   "engines": {
-    "node": "22.21.1"
+    "node": "22.x"
   },
   "author": "Mahmoud Aldeeb",
   "type": "commonjs",
