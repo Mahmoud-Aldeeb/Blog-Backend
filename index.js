@@ -1,4 +1,7 @@
-require("dotenv").config({ path: __dirname + "/.env" });
+// require("dotenv").config({ path: __dirname + "/.env" });
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 const express = require("express");
 const connectToDb = require("./config/connectToDb");
 const { errorHandler, notFound } = require("./middlewares/error");
@@ -10,31 +13,78 @@ const hpp = require("hpp");
 // init app
 const app = express();
 
-// Connection to Db
-connectToDb();
+// Trust proxy headers (important behind Vercel / reverse proxies)
+app.set("trust proxy", 1);
 
-// Middlewares
 app.use(express.json());
 
+// Connection to Db
+// connectToDb();
+
+// Middlewares
+
 // cors Policy
+const normalizeOrigin = (value) => (value ? value.replace(/\/$/, "") : value);
+
+const defaultOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173", // Vite dev server
+];
+
+const envOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((o) => normalizeOrigin(o.trim()))
+  .filter(Boolean);
+
+if (process.env.FRONTEND_URL) {
+  envOrigins.push(normalizeOrigin(process.env.FRONTEND_URL));
+}
+
+const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:5173", // Vite dev server
-      "https://blog-frontend-psi-beryl.vercel.app",
-      "*",
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g., Postman, curl)
+      if (!origin) return callback(null, true);
+
+      const normalizedOrigin = normalizeOrigin(origin);
+      if (allowedOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error(`CORS blocked for origin: ${normalizedOrigin}`),
+        false
+      );
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   })
 );
-
 // app.use(
 //   cors({
-//     origin: "*",
+//     origin: [
+//       "http://localhost:3000",
+//       "http://localhost:5173", // Vite dev server
+//       "https://blog-frontend-psi-beryl.vercel.app",
+//       "*",
+//     ],
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 //   })
 // );
+
+// Ensure DB connection (important for serverless environments like Vercel)
+app.use(async (req, res, next) => {
+  try {
+    // Skip DB connection for CORS preflight
+    if (req.method === "OPTIONS") return next();
+    await connectToDb();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Apply helmet middleware
 app.use(helmet());

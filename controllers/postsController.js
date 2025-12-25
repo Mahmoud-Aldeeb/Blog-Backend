@@ -28,7 +28,8 @@ module.exports.createPostCtrl = asyncHandler(async (req, res) => {
   const { error } = validationCreatePost(req.body);
   if (error) return res.status(400).send(error.details[0].message);
   // 3. upload photo
-  const imagePath = path.join(__dirname, `../images/${req.file.filename}`);
+  // const imagePath = path.join(__dirname, `../images/${req.file.filename}`);
+  const imagePath = req.file.path;
   const result = await cloudinaryUploadImage(imagePath);
   // 4. create new post and save it to DB
   const post = await Post.create({
@@ -196,7 +197,8 @@ module.exports.updatePostImageCtrl = asyncHandler(async (req, res) => {
   await cloudinaryRemoveImage(post.image.publicId);
 
   // 5. upload new image
-  const imagePath = path.join(__dirname, `../images/${req.file.filename}`);
+  // const imagePath = path.join(__dirname, `../images/${req.file.filename}`);
+  const imagePath = req.file.path;
   const result = await cloudinaryUploadImage(imagePath);
 
   // 6. update the image field in the db

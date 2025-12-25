@@ -95,7 +95,8 @@ module.exports.profilePhotoUploadCtrl = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "No file uploaded" });
   }
   // 2. Get the path to the image
-  const imagePath = path.join(__dirname, `../images/${req.file.filename}`);
+  // const imagePath = path.join(__dirname, `../images/${req.file.filename}`);
+  const imagePath = req.file.path;
 
   // 3. Upload to cloudinary
   const result = await cloudinaryUploadImage(imagePath);
@@ -105,13 +106,16 @@ module.exports.profilePhotoUploadCtrl = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   console.log("user", user);
   // 5. Delete the old profile photo if exist
-  if (user.profilePhoto.publicId !== null) {
-    await cloudinaryRemoveImage(user.profilePhoto.public_id);
+  // if (user.profilePhoto.publicId !== null) {
+  //   await cloudinaryRemoveImage(user.profilePhoto.public_id);
+  // }
+  if (user.profilePhoto.publicId) {
+    await cloudinaryRemoveImage(user.profilePhoto.publicId);
   }
 
   // 6. Change the profilePhoto field in the DB
   user.profilePhoto = {
-    public_id: result.public_id,
+    publicId: result.public_id,
     url: result.secure_url,
   };
   await user.save();
@@ -120,7 +124,7 @@ module.exports.profilePhotoUploadCtrl = asyncHandler(async (req, res) => {
   res.status(200).json({
     message: "File uploaded successfully",
     profilePhoto: {
-      public_id: result.public_id,
+      publicId: result.public_id,
       url: result.secure_url,
     },
   });
@@ -151,7 +155,10 @@ module.exports.deleteUserProfileCtrl = asyncHandler(async (req, res) => {
   }
 
   // 5. Delete the profile picture from cloudinary
-  if (user.profilePhoto.publicId !== null) {
+  // if (user.profilePhoto.publicId !== null) {
+  //   await cloudinaryRemoveImage(user.profilePhoto.publicId);
+  // }
+  if (user.profilePhoto.publicId) {
     await cloudinaryRemoveImage(user.profilePhoto.publicId);
   }
 

@@ -9,6 +9,11 @@ const VerificationToken = require("../models/VerificationToken");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 
+const getFrontendUrl = () => {
+  const url = process.env.FRONTEND_URL || "http://localhost:3000";
+  return url.endsWith("/") ? url.slice(0, -1) : url;
+};
+
 /**---------------------------------------------------
  * @desc Register New User
  * @router /api/auth/register
@@ -45,7 +50,9 @@ module.exports.registerUserCtrl = asyncHandler(async (req, res) => {
   await verifictionToken.save();
 
   // Making the link
-  const link = `http://localhost:3000/users/${user._id}/verify/${verifictionToken.token}`;
+  const link = `${getFrontendUrl()}/users/${user._id}/verify/${
+    verifictionToken.token
+  }`;
 
   // Putting the link into an html template
   const htmlTemplate = `
@@ -107,7 +114,9 @@ module.exports.loginUserCtrl = asyncHandler(async (req, res) => {
       await verificationToken.save();
     }
 
-    const link = `http://localhost:3000/users/${user._id}/verify/${verificationToken.token}`;
+    const link = `${getFrontendUrl()}/users/${user._id}/verify/${
+      verificationToken.token
+    }`;
 
     const htmlTemplate = `
     <div>

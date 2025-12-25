@@ -5,6 +5,11 @@ const VerificationToken = require("../models/VerificationToken");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 
+const getFrontendUrl = () => {
+  const url = process.env.FRONTEND_URL || "http://localhost:3000";
+  return url.endsWith("/") ? url.slice(0, -1) : url;
+};
+
 /**-----------------------------------------------
  * @desc    Send Reset Password Link
  * @route   /api/password/reset-password-link
@@ -39,7 +44,9 @@ module.exports.sendResetPasswordLinkCtrl = asyncHandler(async (req, res) => {
   }
 
   // 4. Creating link
-  const link = `http://localhost:3000/reset-password/${user._id}/${verificationToken.token}`;
+  const link = `${getFrontendUrl()}/reset-password/${user._id}/${
+    verificationToken.token
+  }`;
   // 5. Creating HTML template
   const htmlTemplate = `<a href="${link}">Click here to reset your password</a>`;
   // 6. Sending Email
